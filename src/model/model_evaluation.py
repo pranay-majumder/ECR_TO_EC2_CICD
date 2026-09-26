@@ -14,25 +14,25 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_a
 
 
 ## Use it when you want to run the code in a local environment. It will set the MLflow tracking URI to DagsHub and initialize DagsHub with the specified repository details.
-# mlflow.set_tracking_uri("https://dagshub.com/pranay-majumder/Docker_Pipeline_CI_CD.mlflow")
-# dagshub.init(repo_owner="pranay-majumder", repo_name="Docker_Pipeline_CI_CD", mlflow=True)
+mlflow.set_tracking_uri("https://dagshub.com/pranay-majumder/ECR_TO_EC2_CICD.mlflow")
+dagshub.init(repo_owner="pranay-majumder", repo_name="ECR_TO_EC2_CICD", mlflow=True)
 
 
 # MLflow + DagsHub
 # Set up DagsHub Credentials for MLflow Tracking (Usefull for GitHub Actions CI/CD Pipeline)
-dagshub_token = os.getenv("DAGSHUB_TOKEN")
-if not dagshub_token:
-    raise EnvironmentError("DAGSHUB_TOKEN environment variable is not set")
+# dagshub_token = os.getenv("DAGSHUB_TOKEN")
+# if not dagshub_token:
+#     raise EnvironmentError("DAGSHUB_TOKEN environment variable is not set")
 
-os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
-os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
+# os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
+# os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
 
-dagshub_url = "https://dagshub.com"
-repo_owner = "pranay-majumder"
-repo_name = "Docker_Pipeline_CI_CD"
+# dagshub_url = "https://dagshub.com"
+# repo_owner = "pranay-majumder"
+# repo_name = "ECR_TO_EC2_CICD"
 
-# # Set up MLflow tracking URI
-mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
+# # # Set up MLflow tracking URI
+# mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
 
 # Logging
