@@ -12,8 +12,9 @@ from pydantic import BaseModel
 from text_processing import normalize_text
 
 
-# mlflow.set_tracking_uri("https://dagshub.com/pranay-majumder/Docker_Pipeline_CI_CD.mlflow")
-# dagshub.init(repo_owner="pranay-majumder", repo_name="Docker_Pipeline_CI_CD", mlflow=True)
+## Usefull for running the code in a local environment. It will set the MLflow tracking URI to DagsHub and initialize DagsHub with the specified repository details.
+## mlflow.set_tracking_uri("https://dagshub.com/pranay-majumder/ECR_TO_EC2_CICD.mlflow")
+## dagshub.init(repo_owner="pranay-majumder", repo_name="ECR_TO_EC2_CICD", mlflow=True)
 
 
 # ============================================================
@@ -31,7 +32,7 @@ os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
 
 dagshub_url = "https://dagshub.com"
 repo_owner = "pranay-majumder"
-repo_name = "Docker_Pipeline_CI_CD"
+repo_name = "ECR_TO_EC2_CICD"
 
 mlflow.set_tracking_uri(
     f"{dagshub_url}/{repo_owner}/{repo_name}.mlflow"
