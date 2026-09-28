@@ -1,0 +1,92 @@
+name: CI Pipeline
+
+on: push
+
+jobs:
+  project-testing:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v3
+
+      - name: setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: run pipeline
+        env:
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+        run: |
+          dvc repro
+      
+      ## Always add the Test Step after "dvc repro" to ensure that the pipeline runs successfully before running tests.
+      ## Run Model Tests
+      - name: run Model tests
+        env:
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+        run: |
+          python -m unittest -v test.test_model
+      
+
+      ## This Secrets are already set in the repository settings. You can add them by going to Settings -> Secrets and Variables -> Actions -> New Repository Secret.
+      
+      - name: Log in to AWS ECR
+        if: success()
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set default.region us-east-1
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 267653921913.dkr.ecr.us-east-1.amazonaws.com
+
+
+      - name: Build Docker image
+        if: success()
+        run: |
+          docker build -t pranay_ecr .
+
+      - name: Tag Docker image
+        if: success()
+        run: |
+          docker tag pranay_ecr:latest 267653921913.dkr.ecr.us-east-1.amazonaws.com/pranay_ecr:latest
+      
+
+      - name: Push Docker image to AWS ECR
+        if: success()
+        run: |
+          docker push 267653921913.dkr.ecr.us-east-1.amazonaws.com/pranay_ecr:latest
+      
+      ## Deploy From AWS ECR to EC2 Instance
+      - name: Deploy to EC2
+        if: success()
+        uses: appleboy/ssh-action@v0.1.5
+        with: 
+          ## Store this Secrets in your GitHub repository settings. Go to Settings -> Secrets and Variables -> Actions -> New Repository Secret.
+          host: ${{ secrets.EC2_HOST }}     ## EC2_HOST is the Public IP4 Address of your EC2 instance. You can find it in the AWS Management Console under the EC2 service.
+          username: ${{ secrets.EC2_USER }} ## EC2_USER is the username for your EC2 instance. For Amazon Linux, the default user is "ec2-user". For Ubuntu, it is "ubuntu".
+          key: ${{ secrets.EC2_KEY }}       ## EC2_KEY is the private key associated with your EC2 instance. You can generate a "key pair" in the AWS Management Console under the EC2 service (During instance creation). Make sure to keep the private key secure and do not share it publicly.
+          script: |
+            aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws configure set default.region us-east-1
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 267653921913.dkr.ecr.us-east-1.amazonaws.com
+            docker pull 267653921913.dkr.ecr.us-east-1.amazonaws.com/pranay_ecr:latest
+            docker stop my-app || true
+            docker rm my-app || true
+            docker run -p 80:8000 -d --name my-app \
+              -e DAGSHUB_TOKEN=${{ secrets.DAGSHUB_TOKEN }} \
+              267653921913.dkr.ecr.us-east-1.amazonaws.com/pranay_ecr:latest
+          
