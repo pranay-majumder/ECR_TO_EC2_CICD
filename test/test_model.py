@@ -31,7 +31,7 @@ os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
 
 dagshub_url = "https://dagshub.com"
 repo_owner = "pranay-majumder"
-repo_name = "Docker_Pipeline_CI_CD"
+repo_name = "ECR_TO_EC2_CICD"
 
 # Set up MLflow tracking URI
 mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
